@@ -23,6 +23,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT or keyboard.is_pressed('esc'):
             running = False
+    all_sprites.add(player.bullets)
     all_sprites.update()
     all_sprites.draw(screen)
     pygame.display.flip()

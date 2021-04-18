@@ -1,7 +1,10 @@
 import pygame
 import keyboard
+import time
+
 from consts import *
 from vector import Vector
+from bullet import Bullet
 
 
 class Player(pygame.sprite.Sprite):
@@ -17,11 +20,16 @@ class Player(pygame.sprite.Sprite):
         self.image = self.or_image
         self.location = Vector(WIDTH / 2, HEIGHT / 2)
         self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
-        self.add_speed = WIDTH / 10000
-        self.max_speed = WIDTH / 100
+        self.add_speed = WIDTH / 3500
+        self.max_speed = WIDTH / 150
         self.direction = Vector(0, -1)
         self.move_dir = Vector(0, 0)
         self.rot_angle = 8
+
+        self.cooldown = 0.5
+        self.last_shoot_time = -self.cooldown
+
+        self.bullets = pygame.sprite.Group()
 
     def move(self):
         if keyboard.is_pressed('w'):
@@ -33,15 +41,15 @@ class Player(pygame.sprite.Sprite):
             self.rotate(-self.rot_angle)
         if keyboard.is_pressed('d'):
             self.rotate(self.rot_angle)
-        self.move_dir *= 0.999
+        self.move_dir *= 0.98
         self.location += self.move_dir
+        self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
 
     def update_image(self):
         if keyboard.is_pressed('w'):
             self.image = pygame.transform.rotozoom(self.or_image_f, -self.direction.angle() - 90, 1)
         else:
             self.image = pygame.transform.rotozoom(self.or_image, -self.direction.angle() - 90, 1)
-        self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
 
     def update(self):
         if self.rect.top > HEIGHT:
@@ -62,9 +70,16 @@ class Player(pygame.sprite.Sprite):
             self.relocate(x, y)
         self.update_image()
         self.move()
+        self.shoot()
 
     def relocate(self, x, y):
         self.location = Vector(x, y)
 
     def rotate(self, rot_angle):
         self.direction = self.direction.rotate(rot_angle)
+
+    def shoot(self):
+        if keyboard.is_pressed('space') and \
+                time.time() - self.last_shoot_time > self.cooldown:
+            self.bullets.add(Bullet(self.location, self.direction))
+            self.last_shoot_time = time.time()

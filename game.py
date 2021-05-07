@@ -32,14 +32,21 @@ class Game:
             screen.fill(SPACE)
 
             player_astr_hits = pygame.sprite.spritecollide(self.player, self.asteroids,
-                                                      False, pygame.sprite.collide_circle)
+                                                           False, pygame.sprite.collide_circle)
             player_enemy_hits = pygame.sprite.spritecollide(self.player, Enemy.bullets,
-                                                      True, pygame.sprite.collide_circle)
-            astr_bul_hits = pygame.sprite.groupcollide(self.enemy, self.player.bullets,
-                                                  True, True, pygame.sprite.collide_circle)
-
-            enemy_player_hits = pygame.sprite.groupcollide(self.asteroids, self.all_bullets,
+                                                            True, pygame.sprite.collide_circle)
+            astr_bul_hits = pygame.sprite.groupcollide(self.asteroids, self.all_bullets,
                                                        True, True, pygame.sprite.collide_circle)
+            pygame.sprite.groupcollide(self.asteroids, self.all_bullets,
+                                       True, True, pygame.sprite.collide_circle)
+            enemy_hits = pygame.sprite.groupcollide(self.enemy, self.asteroids,
+                                       False, False, pygame.sprite.collide_circle)
+            pygame.sprite.groupcollide(self.enemy, self.player.bullets,
+                                       True, True, pygame.sprite.collide_circle)
+
+            for hitted_en in enemy_hits:
+                if not hitted_en.is_undead:
+                    hitted_en.kill()
 
             for hitted_astr in astr_bul_hits:
                 if type(hitted_astr) is BigAsteroid:
@@ -69,7 +76,7 @@ class Game:
             self.asteroids.update()
             self.asteroids.draw(screen)
 
-            if (random.randrange(0, 800) == 0):
+            if (random.randrange(0, 200) == 0):
                 self.enemy.add(Enemy())
 
             self.enemy.update(self.player.location)

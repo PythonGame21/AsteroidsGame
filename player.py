@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
 
         self.direction = Vector(0, -1)
         self.move_dir = Vector(0, 0)
-        self.rot_angle = 480
+        self.rot_angle = 300
 
         self.cooldown = 0.2
         self.last_shoot_time = -self.cooldown

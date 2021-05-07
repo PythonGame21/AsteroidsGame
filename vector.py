@@ -1,7 +1,7 @@
 import math
+import random
 
-class Vector():
-
+class Vector:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -62,3 +62,7 @@ class Vector():
             return Vector(0, 0)
         else:
             return self / length
+
+    @staticmethod
+    def get_random_direct():
+        return Vector(1, 0).rotate(random.randrange(-10000, 10000))

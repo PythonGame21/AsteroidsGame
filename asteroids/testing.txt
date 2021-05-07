@@ -1,2 +1,0 @@
-Для запуска тестов используйте:
-  python -m unittest discover

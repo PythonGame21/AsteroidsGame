@@ -7,17 +7,16 @@ from consts import *
 from player import Player
 from asteroid import BigAsteroid, SmallAsteroid
 from vector import Vector
-from os import path
+from enemy import Enemy
 
 
 class Game:
     def __init__(self):
-        img_dir = path.join(path.dirname(__file__), 'img')
-
-        self.all_sprites = pygame.sprite.Group()
         self.asteroids = pygame.sprite.Group()
+        self.enemy = pygame.sprite.Group()
+        self.all_bullets = pygame.sprite.Group()
         self.player = Player()
-        self.all_sprites.add(self.player)
+        self.player_sprite = pygame.sprite.Group(self.player)
         self.asteroid_spawn_cooldawn = 10
         self.last_astr_spawn_time = -self.asteroid_spawn_cooldawn
 
@@ -32,16 +31,23 @@ class Game:
         while running:
             screen.fill(SPACE)
 
-            player_hits = pygame.sprite.spritecollide(self.player, self.asteroids, False, pygame.sprite.collide_circle)
-            bul_hits = pygame.sprite.groupcollide(self.asteroids, self.player.bullets, True, True, pygame.sprite.collide_circle)
+            player_astr_hits = pygame.sprite.spritecollide(self.player, self.asteroids,
+                                                      False, pygame.sprite.collide_circle)
+            player_enemy_hits = pygame.sprite.spritecollide(self.player, Enemy.bullets,
+                                                      True, pygame.sprite.collide_circle)
+            astr_bul_hits = pygame.sprite.groupcollide(self.enemy, self.player.bullets,
+                                                  True, True, pygame.sprite.collide_circle)
 
-            for hitted in bul_hits:
-                if type(hitted) is BigAsteroid:
-                    location = hitted.location
+            enemy_player_hits = pygame.sprite.groupcollide(self.asteroids, self.all_bullets,
+                                                       True, True, pygame.sprite.collide_circle)
+
+            for hitted_astr in astr_bul_hits:
+                if type(hitted_astr) is BigAsteroid:
+                    location = hitted_astr.location
                     for i in range(2):
                         self.asteroids.add(SmallAsteroid(location, Vector.get_random_direct()))
 
-            if player_hits or self.player.hs_dead_count >= 500:
+            if player_astr_hits or player_enemy_hits or self.player.hs_dead_count >= 500:
                 if not self.player.is_undead:
                     if self.player.life_count == 0:
                         running = False
@@ -55,14 +61,22 @@ class Game:
                 self.spawn_asteroids()
                 self.last_astr_spawn_time = time.time()
 
-            self.player.bullets.update()
-            self.player.bullets.draw(screen)
+            self.all_bullets.add(self.player.bullets)
+            self.all_bullets.add(Enemy.bullets)
+            self.all_bullets.update()
+            self.all_bullets.draw(screen)
 
             self.asteroids.update()
             self.asteroids.draw(screen)
 
-            self.all_sprites.update()
-            self.all_sprites.draw(screen)
+            if (random.randrange(0, 800) == 0):
+                self.enemy.add(Enemy())
+
+            self.enemy.update(self.player.location)
+            self.enemy.draw(screen)
+
+            self.player_sprite.update()
+            self.player_sprite.draw(screen)
 
             pygame.display.flip()
 

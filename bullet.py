@@ -7,21 +7,30 @@ from os import path
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, location, dir):
+    def __init__(self, location, dir, is_players):
         pygame.sprite.Sprite.__init__(self)
 
         img_dir = path.join(path.dirname(__file__), 'img')
 
-        bul_image = pygame.image.load(path.join(img_dir, "bullet.png"))
+        if is_players:
+            bul_image = pygame.image.load(path.join(img_dir, "bullet.png"))
+        else:
+            bul_image = pygame.image.load(path.join(img_dir, "enemybullet.png"))
         self.image = pygame.transform.scale(bul_image, (10, 10))
 
         self.location = location
 
         self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
-        self.speed = 800 / FPS
+        if is_players:
+            self.speed = 800 / FPS
+        else:
+            self.speed = 300 / FPS
         self.move_dir = dir.normalized() * self.speed
 
-        self.life_time = (min(HEIGHT, WIDTH) - 100) / 800
+        if is_players:
+            self.life_time = (min(HEIGHT, WIDTH) - 100) / 800
+        else:
+            self.life_time = (min(HEIGHT, WIDTH) - 100) / 400
         self.spawn_time = time.time()
 
 

@@ -41,9 +41,9 @@ class Player(pygame.sprite.Sprite):
 
         self.bullets = pygame.sprite.Group()
 
-        self.life_count = 3
+        self.life_count = 30
         self.is_undead = True
-        self.undead_time = 2
+        self.undead_time = 3
         self.life_start_time = time.time()
         self.is_invisible = False
 
@@ -60,7 +60,6 @@ class Player(pygame.sprite.Sprite):
         self.move_dir *= (1 - self.resist_coef / FPS)
         self.location += self.move_dir
 
-
     def update_image(self):
         if keyboard.is_pressed('w'):
             self.image = pygame.transform.rotozoom(self.or_image_f, -self.direction.angle() - 90, 1)
@@ -73,7 +72,6 @@ class Player(pygame.sprite.Sprite):
                 self.is_invisible = False
             else:
                 self.is_invisible = True
-
 
     def update(self):
         if self.rect.top > HEIGHT:
@@ -113,7 +111,7 @@ class Player(pygame.sprite.Sprite):
         self.direction = self.direction.rotate(rot_angle / FPS)
 
     def shoot(self):
-        self.bullets.add(Bullet(self.location, self.direction))
+        self.bullets.add(Bullet(self.location, self.direction, True))
         self.last_shoot_time = time.time()
 
     def hit(self):
@@ -136,4 +134,3 @@ class Player(pygame.sprite.Sprite):
         self.move_dir = Vector(0, 0)
         self.last_hs_time = time.time()
         self.hs_dead_count += 200
-

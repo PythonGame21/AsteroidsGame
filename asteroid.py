@@ -5,12 +5,12 @@ from consts import *
 from vector import Vector
 from os import path
 
+img_dir = path.join(path.dirname(__file__), 'img')
+
 
 class Asteroid(pygame.sprite.Sprite):
     def __init__(self, location, dir):
         pygame.sprite.Sprite.__init__(self)
-
-        img_dir = path.join(path.dirname(__file__), 'img')
 
         astr_image = pygame.image.load(path.join(img_dir, "asteroid.png"))
         self.or_image = pygame.transform.scale(astr_image, (self.size, self.size))

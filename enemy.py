@@ -4,12 +4,17 @@ import random
 
 from consts import *
 from vector import Vector
-from bullet import Bullet
+from bullet import EnemyBullet
 from os import path
+
+img_dir = path.join(path.dirname(__file__), 'img')
+snd_dir = path.join(path.dirname(__file__), 'snd')
 
 
 class Enemy(pygame.sprite.Sprite):
     bullets = pygame.sprite.Group()
+    pygame.mixer.init()
+    shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'enem.mp3'))
 
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -31,10 +36,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.direction = Vector(random.randrange(-20, 20), random.randrange(-100, 0)).normalized()
 
         self.location = Vector(x, y)
-        print(self.location, self.direction)
         self.move_dir = self.direction * random.randrange(75, 125) / FPS
 
-        img_dir = path.join(path.dirname(__file__), 'img')
         ship_image = pygame.image.load(path.join(img_dir, "enemy.png"))
         self.or_image = pygame.transform.scale(ship_image, (50, 50))
         self.image = pygame.transform.rotozoom(self.or_image, -self.direction.angle() - 90, 1)
@@ -50,9 +53,9 @@ class Enemy(pygame.sprite.Sprite):
         self.life_start_time = time.time()
 
     def shoot(self, player_loc):
-
-        Enemy.bullets.add(Bullet(self.location, player_loc - self.location, False))
+        Enemy.bullets.add(EnemyBullet(self.location, player_loc - self.location))
         self.last_shoot_time = time.time()
+        Enemy.shoot_sound.play()
 
     def move(self):
         self.location += self.move_dir
@@ -67,17 +70,3 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
         if time.time() - self.last_shoot_time > self.cooldown:
             self.shoot(player_loc)
-
-    def get_rect(self, is_x_outofscreen):
-        if is_x_outofscreen:
-            x = random.randrange(-20, WIDTH + 21, WIDTH + 40)
-            if x < 0:
-                return Vector(random.randrange(0, 100), random.randrange(-20, 20)).normalized()
-            else:
-                return Vector(random.randrange(-100, 0), random.randrange(-20, 20)).normalized()
-        else:
-            y = random.randrange(-20, HEIGHT + 21, HEIGHT + 40)
-            if y < 0:
-                return Vector(random.randrange(-20, 20), random.randrange(0, 100)).normalized()
-            else:
-                return Vector(random.randrange(-20, 20), random.randrange(-100, 0)).normalized()

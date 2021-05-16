@@ -2,6 +2,7 @@ import pygame
 import keyboard
 import random
 import time
+import pickle
 
 from consts import *
 from player import Player
@@ -27,24 +28,22 @@ class Game:
         self.player = Player()
         self.player_sprite = pygame.sprite.Group(self.player)
         self.explosions = pygame.sprite.Group()
-        self.asteroid_spawn_cooldawn = 3
-        self.enemy_count = 500
+        self.asteroid_spawn_cooldawn = 8
+        self.enemy_count = 1000
         self.last_astr_spawn_time = -self.asteroid_spawn_cooldawn
         self.score = 0
         self.score_multipl = 1
+
+        self.bonus_count = 8
+
+        self.difficulty = 'Difficulty: Easy'
+        self.space_clr = SPACE1
 
         self.is_player_alive = True
         self.dead_time = 2
         self.dead_start_time = 0
 
-        self.shd_img = pygame.image.load(path.join(img_dir, "shild.png"))
-        self.eng_img = pygame.image.load(path.join(img_dir, "enrgy.png"))
-        self.sx2_img = pygame.image.load(path.join(img_dir, "scrx2.png"))
-        self.inv_img = pygame.image.load(path.join(img_dir, "disap.png"))
-        self.shd_img = pygame.transform.scale(self.shd_img, (40, 40))
-        self.eng_img = pygame.transform.scale(self.eng_img, (40, 40))
-        self.sx2_img = pygame.transform.scale(self.sx2_img, (40, 40))
-        self.inv_img = pygame.transform.scale(self.inv_img, (40, 40))
+        self.is_paused = False
 
     def run(self):
         pygame.init()
@@ -68,7 +67,7 @@ class Game:
             if not self.is_player_alive:
                 if time.time() - self.dead_start_time > self.dead_time:
                     running = False
-            screen.fill(SPACE)
+            screen.fill(self.space_clr)
 
             player_astr_hits = pygame.sprite.spritecollide(self.player, self.asteroids,
                                                            False, pygame.sprite.collide_circle)
@@ -108,7 +107,9 @@ class Game:
                 self.score_multipl = 1
 
             for hitted_en in enemy_player_hits:
-                self.spawn_bonus(hitted_en.location)
+                rnd = random.randrange(0, self.bonus_count)
+                if rnd == 0:
+                    self.spawn_bonus(hitted_astr.location)
                 self.explosions.add(Explosion(hitted_en.location, 'md'))
                 hitted_en.kill()
                 random.choice(expl_sounds).play()
@@ -116,7 +117,9 @@ class Game:
 
             for hitted_astr, bullets in astr_bul_hits.items():
                 if type(bullets[0]) is PlayerBullet:
-                    self.spawn_bonus(hitted_astr.location)
+                    rnd = random.randrange(0, self.bonus_count)
+                    if rnd == 0:
+                        self.spawn_bonus(hitted_astr.location)
                     self.score += hitted_astr.radius * self.score_multipl
                 random.choice(expl_sounds).play()
                 location = hitted_astr.location
@@ -132,14 +135,14 @@ class Game:
                     self.explosions.add(Explosion(hit.location, 'bg'))
                     hit.kill()
                     random.choice(expl_sounds).play()
-                    self.player.hit(hit.radius * 6)
+                    self.player.hit(hit.radius * 8)
 
                 for hit in player_enemy_hits:
                     self.explosions.add(Explosion(hit.location, 'sm'))
-                    self.player.hit(300)
+                    self.player.hit(350)
 
                 if self.player.hs_dead_count >= 500:
-                    self.player.hit(250)
+                    self.player.hit(300)
 
                 if self.player.life_scale <= 0:
                     self.explosions.add(Explosion(hit.location, 'player'))
@@ -159,18 +162,32 @@ class Game:
             if random.randrange(0, self.enemy_count) == 0:
                 self.enemy.add(Enemy())
 
-            self.update_all()
+            if not self.is_paused:
+                self.update_all()
             self.draw_all(screen)
 
+            Game.draw_text(screen, self.difficulty, 30, WIDTH / 2, HEIGHT - 50)
             Game.draw_text(screen, str(self.score), 25, WIDTH / 2, 10)
             Game.draw_bar(screen, 5, 5, 200, 20, self.player.life_scale / 10, RED, GREEN)
             self.draw_bonuses(screen)
 
+            self.update_difficulty()
+
+            if keyboard.is_pressed('g'):
+                self.save()
+            if keyboard.is_pressed('h'):
+                self.load()
+
+            if keyboard.is_pressed('p') and self.is_paused:
+                self.is_paused = False
+            elif keyboard.is_pressed('p') and not self.is_paused:
+                self.is_paused = True
+            if self.is_paused:
+                Game.draw_text(screen, 'Paused', 50, WIDTH / 2, HEIGHT / 2)
+
             pygame.display.flip()
 
             clock.tick(FPS)
-            print(self.score_multipl)
-
         pygame.quit()
 
     def spawn_asteroids(self):
@@ -235,15 +252,10 @@ class Game:
         for name, bonus in self.player.active_bonuses.items():
             x = WIDTH - 155
             y = 10 + 50 * count
+            if name == 'Health':
+                continue
             if bonus.is_active:
-                if name == 'Shield':
-                    img = self.shd_img
-                elif name == 'Energy':
-                    img = self.eng_img
-                elif name == 'ScoreX2':
-                    img = self.sx2_img
-                elif name == 'Invisibility':
-                    img = self.inv_img
+                img = bonus.image
                 rect = img.get_rect(topleft=(x, y))
                 screen.blit(img, rect)
                 y += 15
@@ -251,6 +263,22 @@ class Game:
                 pct = 100 - (bonus.activ_time / bonus.validity_period) * 100
                 Game.draw_bar(screen, x, y, 100, 10, pct, WHITE, BLUE)
                 count += 1
+
+    def update_difficulty(self):
+        if self.score > 5000:
+            self.difficulty = 'Difficulty: Hard'
+            self.asteroid_spawn_cooldawn = 3
+            self.enemy_count = 200
+            self.bonus_count = 15
+            if self.space_clr != SPACE3:
+                self.space_clr = (self.space_clr[0] + 1, self.space_clr[1] - 1, 0)
+        elif self.score > 1500:
+            self.difficulty = 'Difficulty: Normal'
+            self.asteroid_spawn_cooldawn = 5
+            self.enemy_count = 500
+            self.bonus_count = 12
+            if self.space_clr != SPACE2:
+                self.space_clr = (0, self.space_clr[1] + 1, self.space_clr[2] - 1)
 
     def update_all(self):
         self.bonuses.update()
@@ -273,3 +301,61 @@ class Game:
         self.enemy.draw(screen)
         self.player_sprite.draw(screen)
         self.explosions.draw(screen)
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["asteroids"] = self.asteroids
+        state["enemy"] = self.enemy
+        state["all_bullets"] = self.all_bullets
+        state["bonuses"] = self.bonuses
+        state["player"] = self.player
+        state["player_sprite"] = self.player_sprite
+        state["explosions"] = self.explosions
+        state["asteroid_spawn_cooldawn"] = self.asteroid_spawn_cooldawn
+        state["enemy_count"] = self.enemy_count
+        state["last_astr_spawn_time"] = self.last_astr_spawn_time
+        state["score"] = self.score
+        state["score_multipl"] = self.score_multipl
+
+        state["bonus_count"] = self.bonus_count
+
+        state["difficulty"] = self.difficulty
+        state["space_clr"] = self.space_clr
+
+        state["is_player_alive"] = self.is_player_alive
+        state["dead_time"] = self.dead_time
+        state["dead_start_time"] = self.dead_start_time
+        return state
+
+    def __setstate__(self, state: dict):
+        self.asteroids = state["asteroids"]
+        self.enemy = state["enemy"]
+        self.all_bullets = state["all_bullets"]
+        self.bonuses = state["bonuses"]
+        self.player = state["player"]
+        self.player_sprite = state["player_sprite"]
+        self.explosions = state["explosions"]
+        self.asteroid_spawn_cooldawn = state["asteroid_spawn_cooldawn"]
+        self.enemy_count = state["enemy_count"]
+        self.last_astr_spawn_time = state["last_astr_spawn_time"]
+        self.score = state["score"]
+        self.score_multipl = state["score_multipl"]
+
+        self.bonus_count = state["bonus_count"]
+
+        self.difficulty = state["difficulty"]
+        self.space_clr = state["space_clr"]
+
+        self.is_player_alive = state["is_player_alive"]
+        self.dead_time = state["dead_time"]
+        self.dead_start_time = state["dead_start_time"]
+
+    def save(self):
+        with open("save.pkl", "wb") as sv:
+            pickle.dump(self, sv)
+
+    def load(self):
+        with open("save.pkl", "rb") as sv:
+            self = pickle.load(sv)
+
+

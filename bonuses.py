@@ -18,7 +18,7 @@ class Bonus(pygame.sprite.Sprite):
         self.radius = int(self.rect.width / 2)
         self.move_dir = Vector.get_random_direct() * random.randrange(1, 5) / 5
         self.spawn_time = time.time()
-        self.life_time = 5
+        self.life_time = 8
 
         self.is_invisible = False
 
@@ -94,7 +94,8 @@ class Invisibility(Bonus):
 
 
 class ActiveBonus:
-    def __init__(self, validity_period):
+    def __init__(self, validity_period, img):
+        self.image = img
         self.activation_time = 0
         self.validity_period = validity_period
         self.is_active = False

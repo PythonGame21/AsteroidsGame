@@ -52,12 +52,20 @@ class Player(pygame.sprite.Sprite):
         self.hs_cooldown = 1.5
         self.last_hs_time = -self.hs_cooldown
         self.hs_dead_count = 0
+        shd_img = pygame.image.load(path.join(img_dir, "shild.png"))
+        eng_img = pygame.image.load(path.join(img_dir, "enrgy.png"))
+        sx2_img = pygame.image.load(path.join(img_dir, "scrx2.png"))
+        inv_img = pygame.image.load(path.join(img_dir, "disap.png"))
+        shd_img = pygame.transform.scale(shd_img, (40, 40))
+        eng_img = pygame.transform.scale(eng_img, (40, 40))
+        sx2_img = pygame.transform.scale(sx2_img, (40, 40))
+        inv_img = pygame.transform.scale(inv_img, (40, 40))
 
-        self.active_bonuses = {'Shield': ActiveBonus(10),
-                               'Health': ActiveBonus(-1),
-                               'Energy': ActiveBonus(8),
-                               'ScoreX2': ActiveBonus(10),
-                               'Invisibility': ActiveBonus(12)}
+        self.active_bonuses = {'Shield': ActiveBonus(8, shd_img),
+                               'Health': ActiveBonus(-1, None),
+                               'Energy': ActiveBonus(5, eng_img),
+                               'ScoreX2': ActiveBonus(10, sx2_img),
+                               'Invisibility': ActiveBonus(8, inv_img)}
 
         self.bullets = pygame.sprite.Group()
 
@@ -168,7 +176,7 @@ class Player(pygame.sprite.Sprite):
 
     def update_bonuses(self):
         if self.active_bonuses['Health'].is_active:
-            self.life_scale += 400
+            self.life_scale += 250
             if self.life_scale > 1000:
                 self.life_scale = 1000
         if self.active_bonuses['Energy'].is_active:

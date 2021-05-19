@@ -13,6 +13,7 @@ from bullet import PlayerBullet
 from os import path
 from explosion import Explosion
 from bonuses import Shield, ScoreX2, Health, Energy, Invisibility
+from save import Save
 
 font_name = pygame.font.match_font('arial')
 img_dir = path.join(path.dirname(__file__), 'img')
@@ -57,6 +58,8 @@ class Game:
         pygame.mixer.music.play(loops=-1)
 
         bonus_sound = pygame.mixer.Sound(path.join(snd_dir, 'bonus.mp3'))
+
+        save_data = Save()
 
         expl_sounds = []
         for snd in ['expl1.wav', 'expl2.wav']:
@@ -174,9 +177,9 @@ class Game:
             self.update_difficulty()
 
             if keyboard.is_pressed('g'):
-                self.save()
+                save_data.save(self)
             if keyboard.is_pressed('h'):
-                self.load()
+                pass
 
             if keyboard.is_pressed('p') and self.is_paused:
                 self.is_paused = False
@@ -352,10 +355,11 @@ class Game:
 
     def save(self):
         with open("save.pkl", "wb") as sv:
-            pickle.dump(self, sv)
+            pickle.dump(self.__getstate__(), sv)
 
     def load(self):
         with open("save.pkl", "rb") as sv:
-            self = pickle.load(sv)
+            info = pickle.load(sv)
+            self.__setstate__(info)
 
 

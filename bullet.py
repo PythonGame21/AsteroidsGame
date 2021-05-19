@@ -45,6 +45,20 @@ class Bullet(pygame.sprite.Sprite):
     def relocate(self, x, y):
         self.location = Vector(x, y)
 
+    def __getstate__(self) -> dict:
+        state = {}
+        state["location"] = self.location
+        state["speed"] = self.speed
+        state["move_dir"] = self.move_dir
+        state["life_time"] = time.time() - self.spawn_time
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__(state["location"], state["move_dir"])
+        self.speed = state["speed"]
+        self.move_dir = state["move_dir"]
+        self.spawn_time = time.time() - state["life_time"]
+
 
 class EnemyBullet(Bullet):
     def __init__(self, location, dir):
@@ -68,4 +82,3 @@ class PlayerBullet(Bullet):
         self.life_time = (min(HEIGHT, WIDTH) - 100) / 800
 
         super().__init__(location, dir)
-

@@ -46,3 +46,15 @@ class Explosion(pygame.sprite.Sprite):
                 self.image = Explosion.explosion_anim[self.size][self.frame]
                 self.rect = self.image.get_rect()
                 self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["size"] = self.size
+        state["location"] = self.location
+        state["frame"] = self.frame
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__(state["location"], state["size"])
+        self.frame = state["frame"]
+        self.last_update = 0

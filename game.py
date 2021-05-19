@@ -6,7 +6,7 @@ import pickle
 
 from consts import *
 from player import Player
-from asteroid import BigAsteroid, SmallAsteroid
+from asteroid import Asteroid
 from vector import Vector
 from enemy import Enemy
 from bullet import PlayerBullet
@@ -58,8 +58,6 @@ class Game:
         pygame.mixer.music.play(loops=-1)
 
         bonus_sound = pygame.mixer.Sound(path.join(snd_dir, 'bonus.mp3'))
-
-        save_data = Save()
 
         expl_sounds = []
         for snd in ['expl1.wav', 'expl2.wav']:
@@ -126,10 +124,10 @@ class Game:
                     self.score += hitted_astr.radius * self.score_multipl
                 random.choice(expl_sounds).play()
                 location = hitted_astr.location
-                if type(hitted_astr) is BigAsteroid:
+                if hitted_astr.size > 45:
                     self.explosions.add(Explosion(location, 'bg'))
                     for i in range(2):
-                        self.asteroids.add(SmallAsteroid(location, Vector.get_random_direct()))
+                        self.asteroids.add(Asteroid(location, Vector.get_random_direct(), int(hitted_astr.size / 2)))
                 else:
                     self.explosions.add(Explosion(location, 'md'))
 
@@ -163,10 +161,11 @@ class Game:
                 self.last_astr_spawn_time = time.time()
 
             if random.randrange(0, self.enemy_count) == 0:
-                self.enemy.add(Enemy())
+                self.enemy.add(Enemy(*Enemy.get_random_position_out_of_screen()))
 
             if not self.is_paused:
                 self.update_all()
+
             self.draw_all(screen)
 
             Game.draw_text(screen, self.difficulty, 30, WIDTH / 2, HEIGHT - 50)
@@ -177,9 +176,9 @@ class Game:
             self.update_difficulty()
 
             if keyboard.is_pressed('g'):
-                save_data.save(self)
+                self.save()
             if keyboard.is_pressed('h'):
-                pass
+                self.load()
 
             if keyboard.is_pressed('p') and self.is_paused:
                 self.is_paused = False
@@ -206,13 +205,13 @@ class Game:
                     x = -45
                 else:
                     y = -45
-                asteroids.add(SmallAsteroid(Vector(x, y), Vector.get_random_direct()))
+                asteroids.add(Asteroid(Vector(x, y), Vector.get_random_direct(), random.randrange(20, 45)))
             else:
                 if is_x_outofscreen:
                     x = -90
                 else:
                     y = -90
-                asteroids.add(BigAsteroid(Vector(x, y), Vector.get_random_direct()))
+                asteroids.add(Asteroid(Vector(x, y), Vector.get_random_direct(), random.randrange(45, 90)))
         self.asteroids.add(asteroids)
 
     def spawn_bonus(self, location):
@@ -263,7 +262,7 @@ class Game:
                 screen.blit(img, rect)
                 y += 15
                 x += 45
-                pct = 100 - (bonus.activ_time / bonus.validity_period) * 100
+                pct = 100 - (bonus.active_time / bonus.validity_period) * 100
                 Game.draw_bar(screen, x, y, 100, 10, pct, WHITE, BLUE)
                 count += 1
 
@@ -331,13 +330,19 @@ class Game:
         return state
 
     def __setstate__(self, state: dict):
-        self.asteroids = state["asteroids"]
-        self.enemy = state["enemy"]
-        self.all_bullets = state["all_bullets"]
-        self.bonuses = state["bonuses"]
+        self.__init__()
+        for astr in state["asteroids"]:
+            self.asteroids.add(astr)
+        for en in state["enemy"]:
+            self.enemy.add(en)
+        for bul in state["all_bullets"]:
+            self.all_bullets.add(bul)
+        for bn in state["bonuses"]:
+            self.bonuses.add(bn)
         self.player = state["player"]
-        self.player_sprite = state["player_sprite"]
-        self.explosions = state["explosions"]
+        self.player_sprite = pygame.sprite.Group(self.player)
+        for ex in state["explosions"]:
+            self.explosions.add(ex)
         self.asteroid_spawn_cooldawn = state["asteroid_spawn_cooldawn"]
         self.enemy_count = state["enemy_count"]
         self.last_astr_spawn_time = state["last_astr_spawn_time"]

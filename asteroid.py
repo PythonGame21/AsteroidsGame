@@ -9,10 +9,11 @@ img_dir = path.join(path.dirname(__file__), 'img')
 
 
 class Asteroid(pygame.sprite.Sprite):
-    def __init__(self, location, dir):
+    def __init__(self, location, dir, size):
         pygame.sprite.Sprite.__init__(self)
 
         astr_image = pygame.image.load(path.join(img_dir, "asteroid.png"))
+        self.size = size
         self.or_image = pygame.transform.scale(astr_image, (self.size, self.size))
         self.image = self.or_image
 
@@ -61,14 +62,17 @@ class Asteroid(pygame.sprite.Sprite):
     def update_image(self):
         self.image = pygame.transform.rotozoom(self.or_image, self.rot_dir.angle(), 1)
 
+    def __getstate__(self) -> dict:
+        state = {}
+        state["location"] = self.location
+        state["speed"] = self.speed
+        state["move_dir"] = self.move_dir
+        state["rot_speed"] = self.rot_speed
+        state["size"] = self.size
+        return state
 
-class BigAsteroid(Asteroid):
-    def __init__(self, location, dir):
-        self.size = random.randrange(50, 90)
-        super().__init__(location, dir)
-
-
-class SmallAsteroid(Asteroid):
-    def __init__(self, location, dir):
-        self.size = random.randrange(25, 45)
-        super().__init__(location, dir)
+    def __setstate__(self, state: dict):
+        self.__init__(state["location"], state["move_dir"], state["size"])
+        self.speed = state["speed"]
+        self.move_dir = state["move_dir"]
+        self.rot_speed = state["rot_speed"]

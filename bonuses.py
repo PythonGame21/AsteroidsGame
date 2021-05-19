@@ -18,7 +18,7 @@ class Bonus(pygame.sprite.Sprite):
         self.radius = int(self.rect.width / 2)
         self.move_dir = Vector.get_random_direct() * random.randrange(1, 5) / 5
         self.spawn_time = time.time()
-        self.life_time = 8
+        self.max_life_time = 8
 
         self.is_invisible = False
 
@@ -37,9 +37,9 @@ class Bonus(pygame.sprite.Sprite):
             self.is_invisible = True
 
     def update(self):
-        if time.time() - self.spawn_time > self.life_time - 2:
+        if time.time() - self.spawn_time > self.max_life_time - 2:
             self.update_image()
-        if time.time() - self.spawn_time > self.life_time:
+        if time.time() - self.spawn_time > self.max_life_time:
             self.kill()
         if self.rect.top > HEIGHT:
             x = self.rect.x + self.rect.width / 2
@@ -61,6 +61,18 @@ class Bonus(pygame.sprite.Sprite):
 
     def relocate(self, x, y):
         self.location = Vector(x, y)
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["location"] = self.location
+        state["move_dir"] = self.move_dir
+        state["life_time"] = time.time() - self.spawn_time
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__(state["location"])
+        self.move_dir = state["move_dir"]
+        self.spawn_time = time.time() - state["life_time"]
 
 
 class Shield(Bonus):
@@ -84,7 +96,7 @@ class Energy(Bonus):
 class ScoreX2(Bonus):
     def __init__(self, location):
         self.bonus_image = pygame.image.load(path.join(img_dir, "scrx2.png"))
-        super().__init__(location)\
+        super().__init__(location)
 
 
 class Invisibility(Bonus):
@@ -93,11 +105,11 @@ class Invisibility(Bonus):
         super().__init__(location)
 
 
+
+
 class ActiveBonus:
-    def __init__(self, validity_period, img):
-        self.image = img
+    def __init__(self):
         self.activation_time = 0
-        self.validity_period = validity_period
         self.is_active = False
         self.active_time = 0
 
@@ -106,6 +118,56 @@ class ActiveBonus:
         self.is_active = True
 
     def update(self):
-        self.activ_time = time.time() - self.activation_time
-        if self.activ_time > self.validity_period:
+        self.active_time = time.time() - self.activation_time
+        if self.active_time > self.validity_period:
             self.is_active = False
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["active_time"] = self.active_time
+        state["is_active"] = self.is_active
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__()
+        self.is_active = state["is_active"]
+        print(state["active_time"])
+        self.activation_time = time.time() - state["active_time"]
+
+
+class ActShield(ActiveBonus):
+    def __init__(self):
+        shd_img = pygame.image.load(path.join(img_dir, "shild.png"))
+        self.image = pygame.transform.scale(shd_img, (40, 40))
+        self.validity_period = 8
+        super().__init__()
+
+
+class ActHealth(ActiveBonus):
+    def __init__(self):
+        self.image = None
+        self.validity_period = -1
+        super().__init__()
+
+class ActEnergy(ActiveBonus):
+    def __init__(self):
+        eng_img = pygame.image.load(path.join(img_dir, "enrgy.png"))
+        self.image = pygame.transform.scale(eng_img, (40, 40))
+        self.validity_period = 5
+        super().__init__()
+
+
+class ActScoreX2(ActiveBonus):
+    def __init__(self):
+        sx2_img = pygame.image.load(path.join(img_dir, "scrx2.png"))
+        self.image = pygame.transform.scale(sx2_img, (40, 40))
+        self.validity_period = 10
+        super().__init__()
+
+class ActInvisibility(ActiveBonus):
+    def __init__(self):
+        inv_img = pygame.image.load(path.join(img_dir, "disap.png"))
+        self.image = pygame.transform.scale(inv_img, (40, 40))
+        self.validity_period = 8
+        super().__init__()
+

@@ -7,7 +7,7 @@ from consts import *
 from vector import Vector
 from bullet import PlayerBullet
 from os import path
-from bonuses import ActiveBonus
+from bonuses import ActShield, ActHealth, ActEnergy, ActScoreX2, ActInvisibility
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -52,20 +52,12 @@ class Player(pygame.sprite.Sprite):
         self.hs_cooldown = 1.5
         self.last_hs_time = -self.hs_cooldown
         self.hs_dead_count = 0
-        shd_img = pygame.image.load(path.join(img_dir, "shild.png"))
-        eng_img = pygame.image.load(path.join(img_dir, "enrgy.png"))
-        sx2_img = pygame.image.load(path.join(img_dir, "scrx2.png"))
-        inv_img = pygame.image.load(path.join(img_dir, "disap.png"))
-        shd_img = pygame.transform.scale(shd_img, (40, 40))
-        eng_img = pygame.transform.scale(eng_img, (40, 40))
-        sx2_img = pygame.transform.scale(sx2_img, (40, 40))
-        inv_img = pygame.transform.scale(inv_img, (40, 40))
 
-        self.active_bonuses = {'Shield': ActiveBonus(8, shd_img),
-                               'Health': ActiveBonus(-1, None),
-                               'Energy': ActiveBonus(5, eng_img),
-                               'ScoreX2': ActiveBonus(10, sx2_img),
-                               'Invisibility': ActiveBonus(8, inv_img)}
+        self.active_bonuses = {'Shield': ActShield(),
+                               'Health': ActHealth(),
+                               'Energy': ActEnergy(),
+                               'ScoreX2': ActScoreX2(),
+                               'Invisibility': ActInvisibility()}
 
         self.bullets = pygame.sprite.Group()
 
@@ -185,3 +177,33 @@ class Player(pygame.sprite.Sprite):
             self.cooldown = 0.2
         for bonus in self.active_bonuses.values():
             bonus.update()
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["location"] = self.location
+        state["direction"] = self.direction
+        state["move_dir"] = self.move_dir
+        state["cooldawned"] = time.time() - self.last_shoot_time
+        state["act_bonuses"] = self.active_bonuses
+        state["bullets"] = self.bullets
+        state["life_scale"] = self.life_scale
+        state["is_undead"] = self.is_undead
+        state["lived_yet"] = time.time() - self.life_start_time
+        state["hs_dead_count"] = self.hs_dead_count
+        state["hs_cooldawned"] = time.time() - self.last_hs_time
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__()
+        self.location = state["location"]
+        self.direction = state["direction"]
+        self.move_dir = state["move_dir"]
+        self.last_shoot_time = time.time() - state["cooldawned"]
+        self.active_bonuses = state["act_bonuses"]
+        for bul in state["bullets"]:
+            self.bullets.add(bul)
+        self.life_scale = state["life_scale"]
+        self.is_undead = state["is_undead"]
+        self.life_start_time = time.time() - state["lived_yet"]
+        self.hs_dead_count = state["hs_dead_count"]
+        self.last_hs_time = time.time() - state["hs_cooldawned"]

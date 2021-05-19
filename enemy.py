@@ -16,26 +16,27 @@ class Enemy(pygame.sprite.Sprite):
     pygame.mixer.init()
     shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'enem.mp3'))
 
-    def __init__(self):
+    def __init__(self, x, y, dir):
         pygame.sprite.Sprite.__init__(self)
-
-        is_x_outofscreen = random.randrange(0, 2) == 1
-        x = random.randrange(200, WIDTH - 200)
-        y = random.randrange(200, HEIGHT - 200)
-        if is_x_outofscreen:
-            x = random.randrange(-20, WIDTH + 21, WIDTH + 40)
-            if x < 0:
-                self.direction = Vector(random.randrange(0, 100), random.randrange(-20, 20)).normalized()
-            else:
-                self.direction = Vector(random.randrange(-100, 0), random.randrange(-20, 20)).normalized()
-        else:
-            y = random.randrange(-20, HEIGHT + 21, HEIGHT + 40)
-            if y < 0:
-                self.direction = Vector(random.randrange(-20, 20), random.randrange(0, 100)).normalized()
-            else:
-                self.direction = Vector(random.randrange(-20, 20), random.randrange(-100, 0)).normalized()
+        #
+        # is_x_outofscreen = random.randrange(0, 2) == 1
+        # x = random.randrange(200, WIDTH - 200)
+        # y = random.randrange(200, HEIGHT - 200)
+        # if is_x_outofscreen:
+        #     x = random.randrange(-20, WIDTH + 21, WIDTH + 40)
+        #     if x < 0:
+        #         self.direction = Vector(random.randrange(0, 100), random.randrange(-20, 20)).normalized()
+        #     else:
+        #         self.direction = Vector(random.randrange(-100, 0), random.randrange(-20, 20)).normalized()
+        # else:
+        #     y = random.randrange(-20, HEIGHT + 21, HEIGHT + 40)
+        #     if y < 0:
+        #         self.direction = Vector(random.randrange(-20, 20), random.randrange(0, 100)).normalized()
+        #     else:
+        #         self.direction = Vector(random.randrange(-20, 20), random.randrange(-100, 0)).normalized()
 
         self.location = Vector(x, y)
+        self.direction = dir
         self.move_dir = self.direction * random.randrange(75, 125) / FPS
 
         ship_image = pygame.image.load(path.join(img_dir, "enemy.png"))
@@ -70,3 +71,39 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.location.x, self.location.y))
         if time.time() - self.last_shoot_time > self.cooldown:
             self.shoot(player_loc)
+
+    @staticmethod
+    def get_random_position_out_of_screen():
+        is_x_outofscreen = random.randrange(0, 2) == 1
+        x = random.randrange(200, WIDTH - 200)
+        y = random.randrange(200, HEIGHT - 200)
+        if is_x_outofscreen:
+            x = random.randrange(-20, WIDTH + 21, WIDTH + 40)
+            if x < 0:
+                direction = Vector(random.randrange(0, 100), random.randrange(-20, 20)).normalized()
+            else:
+                direction = Vector(random.randrange(-100, 0), random.randrange(-20, 20)).normalized()
+        else:
+            y = random.randrange(-20, HEIGHT + 21, HEIGHT + 40)
+            if y < 0:
+                direction = Vector(random.randrange(-20, 20), random.randrange(0, 100)).normalized()
+            else:
+                direction = Vector(random.randrange(-20, 20), random.randrange(-100, 0)).normalized()
+        return x, y, direction.normalized()
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["location"] = self.location
+        state["direction"] = self.direction
+        state["move_dir"] = self.move_dir
+        state["all_bullets"] = Enemy.bullets
+        state["cooldawn_time"] = time.time() - self.last_shoot_time
+        return state
+
+    def __setstate__(self, state: dict):
+        loc_vec = state["location"]
+        self.__init__(loc_vec.x, loc_vec.y, state["direction"])
+        self.move_dir = state["move_dir"]
+        self.last_shoot_time = time.time() - state["cooldawn_time"]
+        Enemy.bullets = state["all_bullets"]
+

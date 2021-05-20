@@ -21,7 +21,13 @@ snd_dir = path.join(path.dirname(__file__), 'snd')
 
 
 class Game:
-    def __init__(self):
+    pygame.init()
+    pygame.mixer.init()
+    pygame.display.set_caption("Asteroids")
+
+    def __init__(self, screen):
+        self.screen = screen
+
         self.asteroids = pygame.sprite.Group()
         self.enemy = pygame.sprite.Group()
         self.all_bullets = pygame.sprite.Group()
@@ -46,16 +52,11 @@ class Game:
 
         self.is_paused = False
 
-    def run(self):
-        pygame.init()
-        pygame.mixer.init()
-        screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Asteroids")
-        clock = pygame.time.Clock()
+        self.is_savinge = False
+        self.save_start_time = 0
 
-        pygame.mixer.music.load(path.join(snd_dir, 'mus.mp3'))
-        pygame.mixer.music.set_volume(0.4)
-        pygame.mixer.music.play(loops=-1)
+    def run(self):
+        clock = pygame.time.Clock()
 
         bonus_sound = pygame.mixer.Sound(path.join(snd_dir, 'bonus.mp3'))
 
@@ -67,10 +68,7 @@ class Game:
 
         running = True
         while running:
-            if not self.is_player_alive:
-                if time.time() - self.dead_start_time > self.dead_time:
-                    running = False
-            screen.fill(self.space_clr)
+            self.screen.fill(self.space_clr)
 
             player_astr_hits = pygame.sprite.spritecollide(self.player, self.asteroids,
                                                            False, pygame.sprite.collide_circle)
@@ -154,10 +152,6 @@ class Game:
                     self.is_player_alive = False
                     self.dead_start_time = time.time()
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT or keyboard.is_pressed('esc'):
-                    running = False
-
             if time.time() - self.last_astr_spawn_time > self.asteroid_spawn_cooldawn:
                 self.spawn_asteroids()
                 self.last_astr_spawn_time = time.time()
@@ -167,31 +161,56 @@ class Game:
 
             if not self.is_paused:
                 self.update_all()
+<<<<<<< Updated upstream
             self.draw_all(screen)
+=======
 
-            Game.draw_text(screen, self.difficulty, 30, WIDTH / 2, HEIGHT - 50)
-            Game.draw_text(screen, str(self.score), 25, WIDTH / 2, 10)
-            Game.draw_bar(screen, 5, 5, 200, 20, self.player.life_scale / 10, RED, GREEN)
-            self.draw_bonuses(screen)
+            self.draw_all(self.screen)
+>>>>>>> Stashed changes
+
+            Game.draw_text(self.screen, self.difficulty, 30, WIDTH / 2, HEIGHT - 50)
+            Game.draw_text(self.screen, str(self.score), 25, WIDTH / 2, 10)
+            Game.draw_bar(self.screen, 5, 5, 200, 20, self.player.life_scale / 10, RED, GREEN)
+            self.draw_bonuses(self.screen)
 
             self.update_difficulty()
 
             if keyboard.is_pressed('g'):
+<<<<<<< Updated upstream
                 save_data.save(self)
             if keyboard.is_pressed('h'):
                 pass
+=======
+                self.save_start_time = time.time()
+                self.save()
+                pygame.time.delay(200)
+            if time.time() - self.save_start_time < 2:
+                Game.draw_text(self.screen, 'Saved', 50, WIDTH - 100, HEIGHT - 70)
+>>>>>>> Stashed changes
 
             if keyboard.is_pressed('p') and self.is_paused:
                 self.is_paused = False
+                pygame.time.delay(100)
             elif keyboard.is_pressed('p') and not self.is_paused:
                 self.is_paused = True
+                pygame.time.delay(100)
             if self.is_paused:
-                Game.draw_text(screen, 'Paused', 50, WIDTH / 2, HEIGHT / 2)
+                Game.draw_text(self.screen, 'Paused', 50, WIDTH / 2, HEIGHT / 2)
 
             pygame.display.flip()
 
             clock.tick(FPS)
-        pygame.quit()
+
+            if not self.is_player_alive:
+                if time.time() - self.dead_start_time > self.dead_time:
+                    running = False
+            if keyboard.is_pressed('esc'):
+                running = False
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return 1
+                    running = False
+        return 0
 
     def spawn_asteroids(self):
         count = 6
@@ -330,11 +349,24 @@ class Game:
         state["dead_start_time"] = self.dead_start_time
         return state
 
+<<<<<<< Updated upstream
     def __setstate__(self, state: dict):
         self.asteroids = state["asteroids"]
         self.enemy = state["enemy"]
         self.all_bullets = state["all_bullets"]
         self.bonuses = state["bonuses"]
+=======
+    def __setstate__(self, screen, state: dict):
+        self.__init__(screen)
+        for astr in state["asteroids"]:
+            self.asteroids.add(astr)
+        for en in state["enemy"]:
+            self.enemy.add(en)
+        for bul in state["all_bullets"]:
+            self.all_bullets.add(bul)
+        for bn in state["bonuses"]:
+            self.bonuses.add(bn)
+>>>>>>> Stashed changes
         self.player = state["player"]
         self.player_sprite = state["player_sprite"]
         self.explosions = state["explosions"]
@@ -357,9 +389,9 @@ class Game:
         with open("save.pkl", "wb") as sv:
             pickle.dump(self.__getstate__(), sv)
 
-    def load(self):
+    def load(self, screen):
         with open("save.pkl", "rb") as sv:
             info = pickle.load(sv)
-            self.__setstate__(info)
+            self.__setstate__(screen, info)
 
 

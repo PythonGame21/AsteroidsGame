@@ -29,7 +29,6 @@ class Player(pygame.sprite.Sprite):
         self.or_sh_dis = pygame.transform.scale(ship_dis, (50, 50))
         self.image = self.or_image
 
-        pygame.mixer.init()
         self.shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
         self.dmg_sound = pygame.mixer.Sound(path.join(snd_dir, 'damg.mp3'))
         self.hs_sound = pygame.mixer.Sound(path.join(snd_dir, 'hs.mp3'))

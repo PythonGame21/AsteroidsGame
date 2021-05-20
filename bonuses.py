@@ -109,3 +109,55 @@ class ActiveBonus:
         self.activ_time = time.time() - self.activation_time
         if self.activ_time > self.validity_period:
             self.is_active = False
+<<<<<<< Updated upstream
+=======
+
+    def __getstate__(self) -> dict:
+        state = {}
+        state["active_time"] = self.active_time
+        state["is_active"] = self.is_active
+        return state
+
+    def __setstate__(self, state: dict):
+        self.__init__()
+        self.is_active = state["is_active"]
+        self.activation_time = time.time() - state["active_time"]
+
+
+class ActShield(ActiveBonus):
+    def __init__(self):
+        shd_img = pygame.image.load(path.join(img_dir, "shild.png"))
+        self.image = pygame.transform.scale(shd_img, (40, 40))
+        self.validity_period = 8
+        super().__init__()
+
+
+class ActHealth(ActiveBonus):
+    def __init__(self):
+        self.image = None
+        self.validity_period = -1
+        super().__init__()
+
+class ActEnergy(ActiveBonus):
+    def __init__(self):
+        eng_img = pygame.image.load(path.join(img_dir, "enrgy.png"))
+        self.image = pygame.transform.scale(eng_img, (40, 40))
+        self.validity_period = 5
+        super().__init__()
+
+
+class ActScoreX2(ActiveBonus):
+    def __init__(self):
+        sx2_img = pygame.image.load(path.join(img_dir, "scrx2.png"))
+        self.image = pygame.transform.scale(sx2_img, (40, 40))
+        self.validity_period = 10
+        super().__init__()
+
+class ActInvisibility(ActiveBonus):
+    def __init__(self):
+        inv_img = pygame.image.load(path.join(img_dir, "disap.png"))
+        self.image = pygame.transform.scale(inv_img, (40, 40))
+        self.validity_period = 8
+        super().__init__()
+
+>>>>>>> Stashed changes

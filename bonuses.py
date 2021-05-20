@@ -131,7 +131,6 @@ class ActiveBonus:
     def __setstate__(self, state: dict):
         self.__init__()
         self.is_active = state["is_active"]
-        print(state["active_time"])
         self.activation_time = time.time() - state["active_time"]
 
 

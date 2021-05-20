@@ -18,22 +18,6 @@ class Enemy(pygame.sprite.Sprite):
 
     def __init__(self, x, y, dir):
         pygame.sprite.Sprite.__init__(self)
-        #
-        # is_x_outofscreen = random.randrange(0, 2) == 1
-        # x = random.randrange(200, WIDTH - 200)
-        # y = random.randrange(200, HEIGHT - 200)
-        # if is_x_outofscreen:
-        #     x = random.randrange(-20, WIDTH + 21, WIDTH + 40)
-        #     if x < 0:
-        #         self.direction = Vector(random.randrange(0, 100), random.randrange(-20, 20)).normalized()
-        #     else:
-        #         self.direction = Vector(random.randrange(-100, 0), random.randrange(-20, 20)).normalized()
-        # else:
-        #     y = random.randrange(-20, HEIGHT + 21, HEIGHT + 40)
-        #     if y < 0:
-        #         self.direction = Vector(random.randrange(-20, 20), random.randrange(0, 100)).normalized()
-        #     else:
-        #         self.direction = Vector(random.randrange(-20, 20), random.randrange(-100, 0)).normalized()
 
         self.location = Vector(x, y)
         self.direction = dir
